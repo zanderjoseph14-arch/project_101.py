@@ -1,0 +1,152 @@
+import sqlite3
+
+
+
+conn = sqlite3.connect("inventory.db")
+cursor = conn.cursor()
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS inventory (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    quantity INTEGER NOT NULL,
+    price REAL NOT NULL
+)
+""")
+
+conn.commit()
+conn.close()
+
+
+
+def add_item():
+    name = input("Enter item name: ")
+
+    while True:
+        try:
+            quantity = int(input("Enter quantity: "))
+            price = float(input("Enter price: "))
+            break
+        except ValueError:
+            print("Invalid input. Please enter numbers only.")
+
+    conn = sqlite3.connect("inventory.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "INSERT INTO inventory (name, quantity, price) VALUES (?, ?, ?)",
+        (name, quantity, price)
+    )
+
+    conn.commit()
+    conn.close()
+
+    print("Item added successfully!")
+
+
+
+def view_items():
+    conn = sqlite3.connect("inventory.db")
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM inventory")
+    items = cursor.fetchall()
+
+    conn.close()
+
+    if not items:
+        print("\nInventory is empty.")
+        return
+
+    print("\n===== INVENTORY LIST =====")
+
+    for item in items:
+        print(f"ID: {item[0]}")
+        print(f"Name: {item[1]}")
+        print(f"Quantity: {item[2]}")
+        print(f"Price: ₱{item[3]:.2f}")
+        print("-------------------------")
+
+
+
+def update_item():
+    view_items()
+
+    try:
+        item_id = int(input("Enter ID to update: "))
+
+        name = input("New item name: ")
+        quantity = int(input("New quantity: "))
+        price = float(input("New price: "))
+
+        conn = sqlite3.connect("inventory.db")
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            UPDATE inventory
+            SET name = ?, quantity = ?, price = ?
+            WHERE id = ?
+        """, (name, quantity, price, item_id))
+
+        conn.commit()
+        conn.close()
+
+        print("Item updated successfully!")
+
+    except ValueError:
+        print("Invalid input.")
+
+
+
+def delete_item():
+    view_items()
+
+    try:
+        item_id = int(input("Enter ID to delete: "))
+
+        conn = sqlite3.connect("inventory.db")
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "DELETE FROM inventory WHERE id = ?",
+            (item_id,)
+        )
+
+        conn.commit()
+        conn.close()
+
+        print("Item deleted successfully!")
+
+    except ValueError:
+        print("Invalid input.")
+
+
+
+while True:
+    print("\n===== INVENTORY MENU =====")
+    print("1. Add Item")
+    print("2. View Items")
+    print("3. Update Item")
+    print("4. Delete Item")
+    print("5. Exit")
+
+    choice = input("Enter choice (1-5): ")
+
+    if choice == "1":
+        add_item()
+
+    elif choice == "2":
+        view_items()
+
+    elif choice == "3":
+        update_item()
+
+    elif choice == "4":
+        delete_item()
+
+    elif choice == "5":
+        print("Exiting Inventory System...")
+        break
+
+    else:
+        print("Invalid choice. Please try again.")
